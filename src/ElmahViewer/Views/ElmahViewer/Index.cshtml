@@ -1,80 +1,376 @@
-﻿@using ElmahViewer
-@using ElmahViewer.Models
-@model ErrorListViewModel
+﻿@{
+    ViewBag.Title = "Errors";
+}
 
-<h4 id="PageTitle" class="controls-container">
-     Error Log for @Html.Partial("_Application", Model.AllApplications)
- </h4>
-        
-@if (Model.Errors.Any())
-{
-    <div class="controls-container">
-        <div class="pagination pagination-mini">
-        <ul>
-            <li><span>Page size</span></li>
-            @{
-                foreach (var size in Model.Sizes)
-                {
-                    var cssClass = size == Model.PageSize ? "active" : "";
-                    <li class="@cssClass">@Html.ActionLink(size.ToString("N0"), "Index", new{ApplicationId = Model.ApplicationName, Size = size, Index = 0})</li>
-                }
-            }
-        </ul>
+<span>Error log for</span>
+<div class="container btn-group">
+    <a href="#" class="btn" data-bind="click: refreshErrors"><i class="icon-refresh"></i><span data-bind="text : currentApplication"></span></a>
+    <button data-toggle="dropdown" class="btn dropdown-toggle"><span class="caret"></span></button>
+    <ul class="dropdown-menu" role="menu" aria-labelledby="dLabel" data-bind="foreach: applications">
+        <li><a href="#" data-bind="click: $parent.changeApplication"><i class="icon-arrow-right"></i><span data-bind="text : name"></span></a></li>
+    </ul>
+</div>
+
+<div class="container" data-bind="visible: errors().length > 0">
+    <div class="row-fluid">
+        <div class="span2">
+            <ul class="pager">
+                <li data-bind="css: {'previous' : true, 'disabled' : (pageIndex() <= 0) }"><a href="#" data-bind="click : previousPage">Previous</a></li>
+            </ul>
+        </div>
+        <div class="span4">
+            <div class="pagination pagination-mini">
+                <span>Page size</span>
+                <ul data-bind="foreach: sizes">
+                    <li data-bind="css: {'active' : ($parent.pageSize() == $data) }"><a href="#" data-bind="click: $parent.changePageSize, text: $data"></a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="span4">
+            Errors <span data-bind="text : firstErrorNumber"></span>&nbsp;to <span data-bind="text : lastErrorNumber"></span>&nbsp;of total <span data-bind="text : totalErrors"></span>&nbsp;(page <span data-bind="text : pageIndex() + 1"></span>&nbsp;of <span data-bind="text : totalPages"></span>)
+        </div>
+        <div class="span2">
+            <ul class="pager">
+                <li data-bind="css: {'next' : true, 'disabled' : (!hasMorePages()) }"><a href="#" data-bind="click : nextPage">Next</a></li>
+            </ul>
+        </div>
     </div>
-        <p>@string.Format("Errors {0} to {1} of total {2} (page {3} of {4}).",
-                      Model.FirstErrorNumber, Model.LastErrorNumber, Model.Count, Model.PageIndex + 1, Model.TotalPages)
-    </p>
-        @Html.Partial("_NextPrev", Model)
-    </div>
+</div>
+<div class="container" data-bind="visible: errors().length > 0">
     <table id="ErrorLog" class="table table-condensed table-striped table-bordered table-hover">
-        <tr>
-            <th>Host</th>
-            <th>Code</th>
-            <th>Type</th>
-            <th>Error</th>
-            <th>User</th>
-            <th>When</th>
-        </tr>
-              
-    @foreach (var error in Model.Errors)
-    {
-        <tr>
-            <td>@error.HostName</td>
-            <td>
-                <span title="@error.StatusDescription">@error.StatusCode</span> 
-            </td>
-            <td>
-                <span title="@error.Type">@error.HumaneType</span>
-            </td>
-            <td class="error-col"><span>@error.Message</span> 
-                @Html.ActionLink("Details...", "Index" ,new { ApplicationId = Url.ForwardSlashEncode(Model.ApplicationName), ErrorId = error.Id })
-            </td>
-            <td>@error.User</td>
-            <td>
-                <abbr title="@error.Iso8601Time">@error.When</abbr>
-            </td>
-        </tr>
-    }
+        <thead>
+            <tr>
+                <th>Host</th>
+                <th>Code</th>
+                <th>Type</th>
+                <th>Error</th>
+                <th>User</th>
+                <th>When</th>
+            </tr>
+        </thead>
+        <tbody data-bind="foreach: errors ">
+            <tr>
+                <td data-bind="text: host"></td>
+                <td>
+                    <span data-bind="attr : { title: statusDescription }, text: code"></span>
+                </td>
+                <td>
+                    <span data-bind="attr: { title: type }, text: humaneType"></span>
+                </td>
+                <td>
+                    <span data-bind="text: errorMessage"></span>
+                    <a data-bind="click: $parent.displayError" href="#">Details...</a>
+                </td>
+                <td data-bind="text : user"></td>
+                <td>
+                    <abbr data-bind="attr : { title : iso8601Time }, text : when"></abbr>
+                </td>
+            </tr>
+        </tbody>
+        <tfoot>
+        </tfoot>
     </table>
-    <div class="controls-container">
-        @Html.Partial("_NextPrev", Model)
-    </div>
-}
-else 
-{
-    <div class="controls-container">
-    @if(Model.PageIndex >= Model.TotalPages && Model.Count > 0)
-    {
-        @Html.ActionLink("Back to first page", "Index", new{Id = Model.ApplicationName, Size = Model.PageSize, Index = 0})
-    }
-    else if(string.IsNullOrEmpty(Model.ApplicationName))
-    {
-        <p>Select an application.</p>
-    }
-    else
-    {
-        <p>No errors found.</p>
-    }
-    </div>
-}
+</div>
+<div class="container" data-bind="visible: errors().length > 0">
+    <ul class="pager">
+        <li data-bind="css: {'previous' : true, 'disabled' : (pageIndex() <= 0) }"><a href="#" data-bind="click : previousPage">Previous</a></li>
+        <li data-bind="css: {'next' : true, 'disabled' : (!hasMorePages()) }"><a href="#" data-bind="click : nextPage">Next</a></li>
+    </ul>
+</div>
 
+<div class="container" data-bind="visible : errors().length == 0">
+
+    <p data-bind="visible: currentApplication() == null">Select an application.</p>
+    <p data-bind="visible: currentApplication() != null">No errors found.</p>
+</div>
+
+<div class="modal hide fade" id="error-detail" data-bind="modal : displayedError">
+    <div class="modal-header">
+        <button type="button" class="close"
+            data-dismiss="modal">
+            ×</button>
+        <h3>Error Details</h3>
+    </div>
+    <div class="modal-body">
+        <h4 id="PageTitle"><span data-bind="text : type"></span></h4>
+        <p id="ErrorId"><span data-bind="text: id"></span></p>
+        <p id="ErrorTitle"><span data-bind="text: message"></span></p>
+        <pre id="ErrorDetail" data-bind="visible : detail != '' "><span data-bind="text : detail"></span></pre>
+        <p id="ErrorLogTime">Logged <span data-bind="text : time"></span></p>
+        <p>Server Variables</p>
+        <div id="ServerVariables">
+            <table class="table table-condensed table-striped table-bordered">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Value</th>
+                    </tr>
+                </thead>
+                <tbody data-bind="foreach : serverVariables">
+                    <tr>
+                        <td data-bind="text : name "></td>
+                        <td data-bind="text : value "></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <p>Cookies</p>
+        <div id="Cookies">
+            <table class="table table-condensed table-striped table-bordered">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Value</th>
+                    </tr>
+                </thead>
+                <tbody data-bind="foreach : cookies">
+                    <tr>
+                        <td data-bind="text : name "></td>
+                        <td data-bind="text : value "></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <p>Form Data</p>
+        <div id="FormData">
+            <table class="table table-condensed table-striped table-bordered">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Value</th>
+                    </tr>
+                </thead>
+                <tbody data-bind="foreach : form">
+                    <tr>
+                        <td data-bind="text : name "></td>
+                        <td data-bind="text : value "></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <p>Query Strings</p>
+        <div id="QueryStringData">
+            <table class="table table-condensed table-striped table-bordered">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Value</th>
+                    </tr>
+                </thead>
+                <tbody data-bind="foreach : queryString">
+                    <tr>
+                        <td data-bind="text : name "></td>
+                        <td data-bind="text : value "></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="modal-footer">
+        <a href="#" class="btn" data-dismiss="modal">Close</a>
+    </div>
+</div>
+
+@section scripts
+{
+    @Scripts.Render("~/bundles/knockout")
+    <script type="text/javascript">
+
+        ko.bindingHandlers['modal'] = {
+            init: function (element, valueAccessor, allBindingsAccessor) {
+                var allBindings = allBindingsAccessor();
+                var $element = $(element);
+                $element.addClass('hide modal');
+
+                if (allBindings.modalOptions) {
+                    if (allBindings.modalOptions.beforeClose) {
+                        $element.on('hide', function () {
+                            return allBindings.modalOptions.beforeClose();
+                        });
+                    }
+                }
+
+                return ko.bindingHandlers['with'].init.apply(this, arguments);
+            },
+            update: function (element, valueAccessor) {
+                var value = ko.utils.unwrapObservable(valueAccessor());
+
+                var returnValue = ko.bindingHandlers['with'].update.apply(this, arguments);
+
+                if (value) {
+                    $(element).modal('show');
+                } else {
+                    $(element).modal('hide');
+                }
+
+                return returnValue;
+            }
+        };
+
+        function ErrorListItem(data) {
+            // data fields
+            this.id = ko.observable(data.Id);
+            this.host = ko.observable(data.HostName);
+            this.code = ko.observable(data.StatusCode);
+            this.type = ko.observable(data.Type);
+            this.humaneType = ko.observable(data.HumaneType);
+            this.errorMessage = ko.observable(data.Message);
+            this.user = ko.observable(data.User);
+            this.when = ko.observable(data.When);
+            this.statusDescription = ko.observable(data.StatusDescription);
+            this.iso8601Time = ko.observable(data.Iso8601Time);
+        }
+
+        function ErrorDetail(data) {
+            var serverVarsArray = [];
+            var cookiesArray = [];
+            var formsArray = [];
+            var queryStringArray = [];
+
+            // data fields
+            this.id = ko.observable(data.Id);
+            this.type = ko.observable(data.Type);
+            this.message = ko.observable(data.Message);
+            this.detail = ko.observable(data.Detail);
+            this.applicationName = ko.observable(data.ApplicationName);
+            this.hostName = ko.observable(data.HostName);
+            this.source = ko.observable(data.Source);
+            this.statusCode = ko.observable(data.StatusCode);
+            this.time = ko.observable(data.Time);
+            this.user = ko.observable(data.User);
+            this.webHostHtmlMessage = ko.observable(data.WebHostHtmlMessage);
+
+            for (var i in data.ServerVariables) {
+                var value = data.ServerVariables[i];
+                serverVarsArray.push({ "name": i, "value": value });
+            }
+            this.serverVariables = ko.observableArray(serverVarsArray);
+
+            for (var cookieName in data.Cookies) {
+                var cookieValue = data.Cookies[cookieName];
+                cookiesArray.push({ "name": cookieName, "value": cookieValue });
+            }
+            this.cookies = ko.observableArray(cookiesArray);
+
+            for (var formName in data.Forms) {
+                var formValue = data.Forms[formName];
+                formsArray.push({ "name": formName, "value": formValue });
+            }
+            this.form = ko.observableArray(formsArray);
+
+            for (var queryStringName in data.Forms) {
+                var queryStringValue = data.Forms[queryStringName];
+                queryStringArray.push({ "name": queryStringName, "value": queryStringValue });
+            }
+            this.queryString = ko.observableArray(queryStringArray);
+        }
+
+        function Application(data) {
+            // Data fields
+            this.name = ko.observable(data);
+        }
+
+        function ErrorListViewModel() {
+            // Data
+            var self = this;
+            self.errors = ko.observableArray([]);
+            self.pageSize = ko.observable();
+            self.pageIndex = ko.observable();
+            self.totalErrors = ko.observable();
+            self.currentApplication = ko.observable();
+            self.sizes = [10, 15, 20, 25, 30, 50, 100];
+            self.applications = ko.observableArray([]);
+            self.displayedError = ko.observable();
+
+            // computed fields
+            self.hasMorePages = ko.computed(function () {
+                return ((self.pageIndex() + 1) * self.pageSize()) < self.totalErrors();
+            });
+
+            self.firstErrorNumber = ko.computed(function () {
+                return self.pageIndex() * self.pageSize() + 1;
+            });
+
+            self.lastErrorNumber = ko.computed(function () {
+                return self.firstErrorNumber() + self.errors().length - 1;
+            });
+
+            self.totalPages = ko.computed(function () {
+                return Math.ceil(self.totalErrors() / self.pageSize());
+            });
+
+            // Operations
+            self.changeApplication = function (application) {
+                self.currentApplication(application.name());
+                self.loadErrorListData();
+            };
+
+            self.refreshErrors = function () {
+                self.pageIndex(0);
+                self.loadErrorListData();
+            };
+
+            self.nextPage = function () {
+                if (self.hasMorePages()) {
+                    self.pageIndex(self.pageIndex() + 1);
+                    self.loadErrorListData();
+                }
+            };
+
+            self.previousPage = function () {
+                if (self.pageIndex() > 0) {
+                    self.pageIndex(self.pageIndex() - 1);
+                    self.loadErrorListData();
+                }
+            };
+
+            self.changePageSize = function (size) {
+                self.pageIndex(0);
+                self.pageSize(size);
+                self.loadErrorListData();
+            };
+
+            self.displayError = function (error) {
+                // get the error detail
+                $.getJSON('@Url.RouteUrl("DefaultApi", new { httpRoute = "", controller = "ElmahErrors" })', { 'id': error.id(), 'applicationId': self.currentApplication() }, function (allData) {
+                    var loadedError = new ErrorDetail(allData);
+
+                    // set the display object.
+                    self.displayedError(loadedError);
+                });
+            };
+
+            self.closeDisplayedError = function () {
+                self.displayedError(undefined);
+            };
+
+            self.loadErrorListData = function () {
+                // get data
+                $.getJSON('@Url.RouteUrl("DefaultApi", new { httproute = "", controller = "ElmahErrors" })', { 'applicationId': self.currentApplication(), 'size': self.pageSize(), 'index': self.pageIndex() }, function (allData) {
+                    var mappedErrors = $.map(allData.Errors, function (item) { return new ErrorListItem(item); });
+                    self.errors(mappedErrors);
+                    self.pageSize(allData.PageSize);
+                    self.pageIndex(allData.PageIndex);
+                    self.totalErrors(allData.Count);
+                    self.currentApplication(allData.ApplicationName);
+                });
+            };
+
+            // Initial state load
+            // Applications
+            $.getJSON('@Url.RouteUrl("DefaultApi", new { httproute = "", controller = "Applications" })', function (data) {
+                var mappedApplications = $.map($.makeArray(data.Applications), function (item) {
+                    return new Application(item);
+                });
+                self.applications(mappedApplications);
+            });
+
+            self.pageIndex(0);
+            self.pageSize(20);
+            self.totalErrors(0);
+        }
+
+        ko.applyBindings(new ErrorListViewModel());
+    </script>
+}

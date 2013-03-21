@@ -1,6 +1,3 @@
-using ElmahViewer.Data;
-using ElmahViewer.Models;
-
 [assembly: WebActivator.PreApplicationStartMethod(typeof(ElmahViewer.App_Start.NinjectWebCommon), "Start")]
 [assembly: WebActivator.ApplicationShutdownMethodAttribute(typeof(ElmahViewer.App_Start.NinjectWebCommon), "Stop")]
 
@@ -56,11 +53,6 @@ namespace ElmahViewer.App_Start
         /// <param name="kernel">The kernel.</param>
         private static void RegisterServices(IKernel kernel)
         {
-            kernel.Bind<ICache>().To<Cache>();
-            kernel.Bind<IErrorLogFactory>().To<SqlErrorLogFactory>().InRequestScope();
-            kernel.Bind<IErrorDetailsViewModelFactory>().To<ErrorViewModelFactory>().InRequestScope();
-            kernel.Bind<IErrorListViewModelFactory>().To<ErrorViewModelFactory>().InRequestScope();
-            kernel.Bind<IElmahApplicationRepository>().To<ElmahApplicationRepository>().InRequestScope();
         }        
     }
 }

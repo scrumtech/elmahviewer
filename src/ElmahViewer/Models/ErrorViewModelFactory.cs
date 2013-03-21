@@ -1,20 +1,17 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-using System.Web;
-using Elmah;
-using ElmahViewer.Data;
-
-namespace ElmahViewer.Models
+﻿namespace ElmahViewer.Models
 {
+    using Elmah;
+    using System.Collections.Generic;
+    using System.Linq;
+    using System.Web;
+
     public class ErrorViewModelFactory : IErrorListViewModelFactory, IErrorDetailsViewModelFactory
     {
-        private readonly IErrorLogFactory _logFactory;
-        private readonly IElmahApplicationRepository _repository;
+        private readonly IErrorLogFactory logFactory;
 
-        public ErrorViewModelFactory(IErrorLogFactory logFactory, IElmahApplicationRepository repository)
+        public ErrorViewModelFactory(IErrorLogFactory logFactory)
         {
-            _logFactory = logFactory;
-            _repository = repository;
+            this.logFactory = logFactory;
         }
 
         public ErrorListViewModel Create(string id, int index, int size)
@@ -27,11 +24,9 @@ namespace ElmahViewer.Models
             {
                 size = 10;
             }
-            var allApps = _repository.GetAllApplicationNames().ToList();
-            var allAppsModel = new ApplicationListModel {Applications = allApps, CurrentApplication = id};
 
             List<ErrorLogEntry> errors = new List<ErrorLogEntry>(size);
-            int count = _logFactory.Create(id).GetErrors(index, size, errors);
+            int count = this.logFactory.Create(id).GetErrors(index, size, errors);
 
             var errorModels = errors.Select(e =>
                                             new ErrorModel
@@ -58,8 +53,7 @@ namespace ElmahViewer.Models
                     Errors = errorModels,
                     ApplicationName = id,
                     PageIndex = index,
-                    PageSize = size,
-                    AllApplications = allAppsModel
+                    PageSize = size
                 };
 
             return model;
@@ -67,8 +61,8 @@ namespace ElmahViewer.Models
 
         public ErrorDetailsViewModel Create(string applicationId, string errorId)
         {
-            var entry = _logFactory.Create(applicationId).GetError(errorId);
-            return new ErrorDetailsViewModel { Id = errorId, Error = entry.Error };
+            var entry = this.logFactory.Create(applicationId).GetError(errorId);
+            return new ErrorDetailsViewModel(errorId, entry.Error);
         }
     }
 }

@@ -1,18 +1,27 @@
 ﻿<!DOCTYPE html>
 <html>
-    <head>
-        <title>Errors</title>
-        <link rel="stylesheet" href="~/Content/css/bootstrap.min.css" type="text/css"/>
-        <link rel="stylesheet" href="~/Content/css/site.css" type="text/css"/>
-        <script type="text/javascript" src="~/Scripts/jquery-1.8.3.min.js"></script>
-        <script type="text/javascript" src="~/Scripts/bootstrap.min.js"></script>
-    </head>
-    <body>
-        <div>
+<head>
+    <title>@ViewBag.Title</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="shortcut icon" href="@Url.Content("~/favicon.ico")" type="image/x-icon">
+    @Styles.Render("~/bundles/css")
+</head>
+<body>
+    <div class="container">
+        @Html.Partial("_NavBar")
+        <div class="row-fluid">
             @RenderBody()
         </div>
-        <script type="text/javascript">
-            $('.disabled').click(false);
-        </script>
-    </body>
+
+        <hr />
+        <div class="footer">
+            <p>&copy; nib health funds 2013</p>
+        </div>
+    </div>
+    @Scripts.Render("~/bundles/jquery", "~/bundles/bootstrap")
+    @RenderSection("scripts", required: false)
+    <script type="text/javascript">
+        $('.disabled').click(false);
+    </script>
+</body>
 </html>
